@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dongle&display=swap" rel="stylesheet">
+    <title>Virtual Aquarium</title>
+</head>
+
+<body>
+    <!-- The p5 canvas will be placed inside this div -->
+    <div id="canvas-container"></div>
+
+    <button data-popup-target="#popup" id="instructions">Instructions</button>
+
+    <!-- Pop-up instructions-->
+    <div class="popup" id="popup">
+        <div class="popup-header">
+            <div class="title">Create your own aquarium experience!</div>
+            <button data-close-button class="close-button">&times;</button>
+        </div>
+        <div class="popup-body">
+            <b><u>INSTRUCTIONS</u></b>
+            <ul>
+                <li>Use the arrow keys to move your fish.</li>
+                <li>Add more (automated) fish to your aquarium by clicking the mouse.</li>
+                <li>Press the backspace key to delete a fish.</li>
+                <li>Press & hold 'b' (for bubble) to blow a bubble until it pops and clear away all the other fish.</li>
+                <li>You can also press the escape key to clear away all other fish.</li>
+                <li>If you start blowing a bubble and want to delete it, press 'p' (for pop).</li>
+                <li>Press the spacebar to start the aquarium noise. Press spacebar again to pause.</li>
+            </ul>
+        </div>
+    </div>
+    <div id="overlay"></div>
+
+    <!-- scripts -->
+    <script type="text/javascript" src="/socket.io/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/addons/p5.sound.min.js"></script>
+    <script src="path/to/p5.sound.js"></script>
+    <script src="userFish.js"></script> <!-- user fish class -->
+    <script src="automatedFish.js"></script> <!-- automated fish class -->
+    <script src="events.js"></script> <!-- event listeners -->
+    <script src="sockets.js"></script> <!-- client-side socket connection -->
+    <script src="sketch.js"></script> <!-- main p5 sketch -->
+
+</html>
