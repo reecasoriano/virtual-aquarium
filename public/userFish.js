@@ -1,20 +1,16 @@
 class userFish {
     // define fish properties
-    constructor(_x = width / 2, _y = height / 2) {
+    constructor(_x = width / 2, _y = height / 2, _socketID) {
         this.x = _x; // x location
         this.y = _y; // y location
         this.dir = 1; // fish direction
         this.w = 110; // fish width
         this.h = 75; // fish height
         this.v = 2;
-
-        /* original default user fish color 
-            // this.bodyCol = color(255, 135, 161); // fish body color
-            // this.tailCol = color(255, 135, 161); // fish tail color
-        */
         this.bodyCol = color(r, g, b); // fish body color
         this.tailCol = color(r, g, b); // fish tail color
         this.glow = color(255, 247, 5, 90); // fish glow
+        this.socketID = _socketID;
     }
 
     // draw fish

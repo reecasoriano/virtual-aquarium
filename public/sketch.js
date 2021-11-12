@@ -1,9 +1,30 @@
+/*** SOCKET STEPS [OLD]
+ *  [x] 1. Initialize Socket.io (index.js:15)
+ *  [x] 2. Establish client-side socket connection (sketch.js:14)
+ *  [x] 3. Emit user data from client to server (sketch.js:109)
+ *  [x] 4. Listen for user data from client (index.js:23)
+ *  [?] 5. Send data from server to all clients (index.js:27)
+ *  [?] 6. Listen to data from server (sockets.js:12 OR sketch.js:113???)
+ * ***/
+
+
+/********** [ SOCKET CONNECTION ] **********/
+
+// establish client-side socket connection (SOCKET STEP 2)
+let socket = io();
+
+socket.on('connect', () => {
+    console.log('Connected');
+});
+
+
 /*********** [ P5 SKETCH ] **********/
 
 let aquarium, seaweed, bubblePop;
 let fromColor, toColor;
 let user; // main fish controlled by user
 let school = []; // array for automated fish
+let users = []; // array for all user fish
 let bubbleSize = 0;
 let leftButtonCount = 0;
 let rightButtonCount = 0;
@@ -34,8 +55,15 @@ function setup() {
     g = random(255);
     b = random(255);
 
-    // create fish controlled by user
-    user = new userFish(); 
+    socket.on('new-fish', (data) => {
+        // create fish controlled by user
+        let newUser = new userFish(windowWidth/2, windowHeight/2, data);
+        newUser.display();
+        users.push(newUser);
+    });
+
+    user = new userFish();
+
 }
 
 function draw() {
@@ -54,6 +82,44 @@ function draw() {
     image(seaweed, width / 1.1, height / 2);
     image(seaweed, width / 2, height / 2);
     image(seaweed, width / 3, height / 1.5);
+    
+    /* ---------- SOCKETS ---------- */
+    // socket.on('allSockets', (data) => {
+    //     // console.log(data.ids);
+    //     users.push(new userFish());
+    // });
+    
+    // populate users array with each client
+    for (let i = 0; i < users.length; i++) {
+        users[i].display();
+        // emit user fish data to server (SOCKET STEP 3)
+        socket.emit('user-data', {
+            x: users[i].x,
+            y: users[i].y,
+            socketID: users[i].socketID
+         });
+    }
+
+    // listen for user fish position from the server (SOCKET STEP 6)
+    // socket.on('new-fish-data', (data) => {
+    //     // console.log(data);
+    //     updateFish(data);
+    // });
+    
+    // function updateFish(pos) {
+    //     let newUser = new userFish(pos.x, pos.y);
+    //     newUser.display();
+    // }
+
+    
+    // listen for user fish position from the server (SOCKET STEP 6)
+    // socket.on('fish-data', (data) => {
+    //     // console.log(data);
+    //     let newUser = new userFish(data.x, data.y);
+    //     newUser.display();
+    // });
+    
+
 
     /* ---------- USER FISH ---------- */
     // display main fish
@@ -96,27 +162,6 @@ function draw() {
     rightButtonCount = 0;
     downButtonCount = 0;
     upButtonCount = 0;
-
-    /* ---------- SOCKETS ---------- */
-    // create data object for sockets
-    let userPos = {
-        x: user.x,
-        y: user.y
-    }
-    // console.log(userPos);
-    
-    // emit user fish position data to server (SOCKET STEP 3)
-    socket.emit('data', userPos);
-
-    /* [ATTEMPT 2 - trying to place code within draw function]
-    // listen for user fish position from the server (SOCKET STEP 6)
-    socket.on('fish-data', (data) => {
-        // console.log(data);
-        let newUser = new userFish(data.x, data.y);
-        newUser.display();
-    });
-    */
-
 
     /* ---------- AUTOMATED FISH - SKETCH ---------- */
     // populate school array with fish
@@ -184,7 +229,8 @@ function keyPressed() {
         if (aquarium.isPlaying() == true) {
             aquarium.pause();
         } else {
-            aquarium.play();
+            aquarium.loop();
+            // aquarium.play();
         }
     }
 

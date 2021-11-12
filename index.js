@@ -18,14 +18,35 @@ io = new io.Server(server);
 // establish socket connection
 io.sockets.on('connection', (socket) => {
     console.log("We have a new client: " + socket.id);
+    // emit new fish on connection
+    io.emit('new-fish', socket.id);
 
-    // listen for user fish position data from client (SOCKET STEP 4)
-    socket.on('data', (data) => {
-        console.log(data); // prints user fish position to server console
+    // listen for user fish data from client (SOCKET STEP 4)
+    socket.on('user-data', (data) => {
+        // console.log(data); // prints user fish data to server console
+        // data.id = socket.id;
 
         // send user fish position to all clients, including myself (SOCKET STEP 5)
-        io.sockets.emit('fish-data', data);
+        //io.sockets.emit('new-fish-data', data);
     });
+
+    /* let new client know how many users already exist */
+    // grab all of the sockets
+    let allSockets = io.sockets.sockets;
+    // create an empty array to store all of the socket ids
+    let socketIDs = [];
+    // use the forEach method to loop through the sockets 'map'
+    allSockets.forEach((value, key) => {
+        socketIDs.push(value.id);
+    });
+    console.log(socketIDs);
+
+    // send an .emit() just to the new user who joined
+    // share all of the existing socketIDs
+    // note this will include the id for this user as well 
+    let socketsData = {ids : socketIDs};
+    socket.emit('allSockets', socketsData);
+
 
     socket.on('disconnect', () => {
         console.log('Client disconnected: ' + socket.id);
