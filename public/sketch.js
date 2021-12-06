@@ -1,20 +1,23 @@
-/*** SOCKET STEPS [OLD]
- *  [x] 1. Initialize Socket.io (index.js:15)
- *  [x] 2. Establish client-side socket connection (sketch.js:14)
- *  [x] 3. Emit user data from client to server (sketch.js:109)
- *  [x] 4. Listen for user data from client (index.js:23)
- *  [?] 5. Send data from server to all clients (index.js:27)
- *  [?] 6. Listen to data from server (sockets.js:12 OR sketch.js:113???)
- * ***/
-
-
 /********** [ SOCKET CONNECTION ] **********/
 
-// establish client-side socket connection (SOCKET STEP 2)
+// establish client-side socket connection
 let socket = io();
 
 socket.on('connect', () => {
     console.log('Connected');
+
+    // ping server with new-user event on connection
+    socket.emit('new-user');
+
+    socket.on('allSockets', (socketsData) => {
+        // populate array with all existing users
+        for (let i = 0; i < socketsData.ids.length - 1; i++) {
+            let pastUser = new userFish(windowWidth / 2, windowHeight / 2, socketsData.ids[i]);
+            allOtherUsers.push(pastUser);
+        }
+    });
+
+
 });
 
 
@@ -23,13 +26,10 @@ socket.on('connect', () => {
 let aquarium, seaweed, bubblePop;
 let fromColor, toColor;
 let user; // main fish controlled by user
+let xPos, yPos, dir;
+let allOtherUsers = []; // array for all user fish
 let school = []; // array for automated fish
-let users = []; // array for all user fish
 let bubbleSize = 0;
-let leftButtonCount = 0;
-let rightButtonCount = 0;
-let downButtonCount = 0;
-let upButtonCount = 0;
 let r, g, b;
 
 /* ---------- PRELOAD ASSETS ---------- */
@@ -55,14 +55,29 @@ function setup() {
     g = random(255);
     b = random(255);
 
-    socket.on('new-fish', (data) => {
+    // set random x and y positions
+    xPos = windowWidth / 2;
+    yPos = windowHeight / 2;
+    dir = 1;
+
+    // create fish controlled by user
+    user = new userFish(xPos, yPos, 'me'); // temp id
+
+    socket.on('new-user', (data) => {
         // create fish controlled by user
-        let newUser = new userFish(windowWidth/2, windowHeight/2, data);
-        newUser.display();
-        users.push(newUser);
+        let otherUser = new userFish(windowWidth / 2, windowHeight / 2, data);
+        allOtherUsers.push(otherUser);
     });
 
-    user = new userFish();
+    socket.on('userPositionServer', (data) => {
+        moveOthers(data);
+    });
+
+    socket.on('user-left', (socketsData) => {
+        if (socketsData.index > -1) {
+            allOtherUsers.splice(socketsData.index, 1);
+        }
+    });
 
 }
 
@@ -82,86 +97,18 @@ function draw() {
     image(seaweed, width / 1.1, height / 2);
     image(seaweed, width / 2, height / 2);
     image(seaweed, width / 3, height / 1.5);
-    
+
     /* ---------- SOCKETS ---------- */
-    // socket.on('allSockets', (data) => {
-    //     // console.log(data.ids);
-    //     users.push(new userFish());
-    // });
-    
-    // populate users array with each client
-    for (let i = 0; i < users.length; i++) {
-        users[i].display();
-        // emit user fish data to server (SOCKET STEP 3)
-        socket.emit('user-data', {
-            x: users[i].x,
-            y: users[i].y,
-            socketID: users[i].socketID
-         });
-    }
+    // display and move users
+    allOtherUsers.forEach(user => user.display());
+    allOtherUsers.forEach(user => user.updatePosition(user.x, user.y));
 
-    // listen for user fish position from the server (SOCKET STEP 6)
-    // socket.on('new-fish-data', (data) => {
-    //     // console.log(data);
-    //     updateFish(data);
-    // });
-    
-    // function updateFish(pos) {
-    //     let newUser = new userFish(pos.x, pos.y);
-    //     newUser.display();
-    // }
-
-    
-    // listen for user fish position from the server (SOCKET STEP 6)
-    // socket.on('fish-data', (data) => {
-    //     // console.log(data);
-    //     let newUser = new userFish(data.x, data.y);
-    //     newUser.display();
-    // });
-    
-
-
-    /* ---------- USER FISH ---------- */
-    // display main fish
+    // display & move current user
     user.display();
+    user.updatePosition(xPos, yPos);
 
-    // move user fish left if left arrow is pressed
-    if (keyIsDown(LEFT_ARROW)) {
-        if (user.x > 50) { // constrain fish to canvas
-            leftButtonCount++;
-            user.swimLeft();
-        }
-    }
-
-    // move user fish right if right arrow is pressed
-    if (keyIsDown(RIGHT_ARROW)) {
-        if (user.x < width - 50) { // constrain fish to canvas
-            rightButtonCount++;
-            user.swimRight();
-        }
-    }
-
-    // move user fish down if down arrow is pressed
-    if (keyIsDown(DOWN_ARROW)) {
-        if (user.y < height - 50) { // constrain fish to canvas
-            downButtonCount++;
-            user.swimDown();
-        }
-    }
-
-    // move user fish up if up arrow is pressed
-    if (keyIsDown(UP_ARROW)) {
-        if (user.y > 50) { // constrain fish to canvas
-            upButtonCount++;
-            user.swimUp();
-        }
-    }
-
-    // reset button counts so speed doesn't keep increasing
-    leftButtonCount = 0;
-    rightButtonCount = 0;
-    downButtonCount = 0;
-    upButtonCount = 0;
+    // move user fish
+    arrowKeys();
 
     /* ---------- AUTOMATED FISH - SKETCH ---------- */
     // populate school array with fish
@@ -175,7 +122,7 @@ function draw() {
     bubble();
 
     // make bubble grow when you press & hold 'b'
-    if (keyIsPressed && keyCode == 66) { // 'b' key code
+    if (keyIsPressed && keyCode === 66) { // 'b' key code
         bubbleSize += 6;
     }
 
@@ -186,6 +133,60 @@ function draw() {
         bubblePop.play(); // playing pop sound when bubble pops
     }
 
+}
+
+
+/* ---------- USER FISH MOVEMENT ---------- */
+function arrowKeys() {
+
+    // move left if left arrow is pressed
+    if (keyIsDown(LEFT_ARROW)) {
+        if (xPos > 50) { // constrain to canvas
+            user.dir = -1;
+            xPos -= 3;
+        }
+    }
+    // move right if right arrow is pressed
+    if (keyIsDown(RIGHT_ARROW)) {
+        if (xPos < width - 50) { // constrain to canvas
+            user.dir = 1;
+            xPos += 3;
+        }
+    }
+    // move down if down arrow is pressed
+    if (keyIsDown(DOWN_ARROW)) {
+        if (yPos < height - 50) { // constrain to canvas
+            yPos += 3;
+        }
+    }
+    // move up if up arrow is pressed
+    if (keyIsDown(UP_ARROW)) { 
+        if (yPos > 50) { // constrain to canvas
+            yPos -= 3;
+        }
+    }
+
+    // update and send user position to server while user moves
+    if (keyIsPressed && (keyCode === UP_ARROW || keyCode === DOWN_ARROW || keyCode === LEFT_ARROW || keyCode === RIGHT_ARROW)) {
+        let userPos = {
+            x: user.x,
+            y: user.y,
+            dir: user.dir
+        };
+        socket.emit('userPosition', userPos);
+    }
+
+}
+
+/* ---------- UPDATE OTHER FISH MOVEMENT ---------- */
+function moveOthers(data) {
+    for (let i = 0; i < allOtherUsers.length; i++) {
+        if (allOtherUsers[i].id == data.id) {
+            allOtherUsers[i].x = data.x;
+            allOtherUsers[i].y = data.y;
+            allOtherUsers[i].dir = data.dir;
+        }
+    }
 }
 
 /* ---------- AUTOMATED FISH FUNCTION ---------- */
@@ -209,28 +210,27 @@ function bubble() {
 /* ---------- KEYBOARD FUNCTIONS ---------- */
 function keyPressed() {
     // delete last fish in school array
-    if (keyCode == BACKSPACE) {
+    if (keyCode === BACKSPACE) {
         school.pop();
     }
 
     // clear all fish
-    if (keyCode == 27) { // escape key code
+    if (keyCode === 27) { // escape key code
         school = [];
     }
 
     // delete (or "pop") bubble
-    if (keyCode == 80) { // 'p' key code
+    if (keyCode === 80) { // 'p' key code
         bubbleSize = 0;
         bubblePop.play();
     }
 
     // play/pause aquarium noise with spacebar
-    if (keyCode == 32) { // spacebar key code
+    if (keyCode === 32) { // spacebar key code
         if (aquarium.isPlaying() == true) {
             aquarium.pause();
         } else {
             aquarium.loop();
-            // aquarium.play();
         }
     }
 

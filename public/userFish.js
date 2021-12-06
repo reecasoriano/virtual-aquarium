@@ -1,8 +1,9 @@
 class userFish {
     // define fish properties
-    constructor(_x = width / 2, _y = height / 2, _socketID) {
-        this.x = _x; // x location
-        this.y = _y; // y location
+    constructor(x, y, id) {
+        this.x = x; // x location
+        this.y = y; // y location
+        this.id = id; // socket id
         this.dir = 1; // fish direction
         this.w = 110; // fish width
         this.h = 75; // fish height
@@ -10,7 +11,6 @@ class userFish {
         this.bodyCol = color(r, g, b); // fish body color
         this.tailCol = color(r, g, b); // fish tail color
         this.glow = color(255, 247, 5, 90); // fish glow
-        this.socketID = _socketID;
     }
 
     // draw fish
@@ -67,23 +67,9 @@ class userFish {
         }
     }
 
-    swimLeft() {
-        this.dir = -1;
-        this.x -= leftButtonCount * 4;
+    updatePosition(x, y) {
+        this.x = x;
+        this.y = y;
     }
-
-    swimRight() {
-        this.dir = 1;
-        this.x += rightButtonCount * 4;
-    }
-
-    swimDown() {
-        this.y += downButtonCount * 4;
-    }
-
-    swimUp() {
-        this.y -= upButtonCount * 4;
-    }
-
 
 }
