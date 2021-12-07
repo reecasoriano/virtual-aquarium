@@ -10,7 +10,7 @@ Current documentation can be found [here](https://reeeecaa.notion.site/Connectio
 *See previous documentation (version 2.0) [here](https://reeeecaa.notion.site/Connections-Lab-Mid-Term-Project-2-Documentation-ad3a8134e00340d3979cf0d8ee4e6d03) [last updated: November 12, 2021].*
 
 ## Sources
-**For p5.js & Socket.io**
+**For p5.js & Sockets / Multiplayer Interaction**
 * [Virtual Aquarium Experience [Version 1]](https://editor.p5js.org/reeca/sketches/8DmMTviie)
 * [Gradient background reference 1](https://p5js.org/examples/color-linear-gradient.html)
 * [Gradient background reference 2](https://p5js.org/reference/#/p5/lerpColor)
@@ -19,9 +19,8 @@ Current documentation can be found [here](https://reeeecaa.notion.site/Connectio
 * [Object reference](https://editor.p5js.org/re7l/sketches/uKP1R3Ex-)
 * [How to code multiplayer games with p5](https://codeheir.com/2019/05/11/how-to-code/)
 * [Multiplayer Interaction with p5js](https://medium.com/geekculture/multiplayer-interaction-with-p5js-f04909e13b87)
-* Enrique García-Alcalá
 
-**For HTML, CSS & JavaScript**
+**For HTML, CSS, JavaScript & Sockets**
 * Enrique García-Alcalá
 * Brian Ho & Craig Protzel
 * [Build a Popup with JavaScript](https://www.youtube.com/watch?v=MBaw_6cPmAw)

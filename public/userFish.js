@@ -1,15 +1,15 @@
 class userFish {
     // define fish properties
-    constructor(x, y, id) {
+    constructor(x, y, id, name) {
         this.x = x; // x location
         this.y = y; // y location
         this.id = id; // socket id
+        this.name = String(name); // username
         this.dir = 1; // fish direction
         this.w = 110; // fish width
         this.h = 75; // fish height
-        this.v = 2;
-        this.bodyCol = color(r, g, b); // fish body color
-        this.tailCol = color(r, g, b); // fish tail color
+        this.bodyCol = color(255, 135, 161); // fish body color
+        this.tailCol = color(255, 135, 161); // fish tail color
         this.glow = color(255, 247, 5, 90); // fish glow
     }
 
@@ -71,5 +71,11 @@ class userFish {
         this.x = x;
         this.y = y;
     }
-
+    
+    addName() {
+        // this.name = String(username);
+        textAlign(CENTER);
+        textStyle(BOLD);
+        text(this.name, this.x, this.y - 50);
+    }
 }

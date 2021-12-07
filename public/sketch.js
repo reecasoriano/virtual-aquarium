@@ -3,21 +3,22 @@
 // establish client-side socket connection
 let socket = io();
 
+// ask user for their name
+let username = window.prompt('Enter name: ');
+
 socket.on('connect', () => {
-    console.log('Connected');
+    console.log("Client connected:", socket.id);
 
     // ping server with new-user event on connection
-    socket.emit('new-user');
+    socket.emit('new-user', { name: username });
 
     socket.on('allSockets', (socketsData) => {
         // populate array with all existing users
         for (let i = 0; i < socketsData.ids.length - 1; i++) {
-            let pastUser = new userFish(windowWidth / 2, windowHeight / 2, socketsData.ids[i]);
+            let pastUser = new userFish(windowWidth / 2, windowHeight / 2, socketsData.ids[i], socketsData.names[i]);
             allOtherUsers.push(pastUser);
         }
     });
-
-
 });
 
 
@@ -26,11 +27,10 @@ socket.on('connect', () => {
 let aquarium, seaweed, bubblePop;
 let fromColor, toColor;
 let user; // main fish controlled by user
-let xPos, yPos, dir;
+let xPos, yPos, dir; // fish properties
 let allOtherUsers = []; // array for all user fish
 let school = []; // array for automated fish
 let bubbleSize = 0;
-let r, g, b;
 
 /* ---------- PRELOAD ASSETS ---------- */
 function preload() {
@@ -50,32 +50,36 @@ function setup() {
     fromColor = color(212, 240, 250); // top color
     toColor = color(79, 178, 214); // bottom color
 
-    // set random colors for user fish
-    r = random(255);
-    g = random(255);
-    b = random(255);
-
-    // set random x and y positions
+    // set default x and y positions
     xPos = windowWidth / 2;
     yPos = windowHeight / 2;
-    dir = 1;
+    dir = 1; // set direction that fish is facing
 
     // create fish controlled by user
-    user = new userFish(xPos, yPos, 'me'); // temp id
+    user = new userFish(xPos, yPos, 'me', username); // temp id
 
     socket.on('new-user', (data) => {
-        // create fish controlled by user
-        let otherUser = new userFish(windowWidth / 2, windowHeight / 2, data);
+        // create new fish when new user joins
+        let otherUser = new userFish(windowWidth / 2, windowHeight / 2, data.id, data.name);
         allOtherUsers.push(otherUser);
     });
 
+    // update positions & move other users
     socket.on('userPositionServer', (data) => {
         moveOthers(data);
     });
 
     socket.on('user-left', (socketsData) => {
-        if (socketsData.index > -1) {
-            allOtherUsers.splice(socketsData.index, 1);
+        let userIndex;
+        // search for socket id of user that just disconnected
+        for (let i = 0; i < allOtherUsers.length; i++) {
+            if (allOtherUsers[i].id == socketsData.ids[socketsData.index]) {
+                userIndex = i;
+            }
+        }
+        // remove disconnected user from array on client
+        if (userIndex > -1) {
+            allOtherUsers.splice(userIndex, 1);
         }
     });
 
@@ -102,10 +106,12 @@ function draw() {
     // display and move users
     allOtherUsers.forEach(user => user.display());
     allOtherUsers.forEach(user => user.updatePosition(user.x, user.y));
+    allOtherUsers.forEach(user => user.addName());
 
     // display & move current user
     user.display();
     user.updatePosition(xPos, yPos);
+    user.addName();
 
     // move user fish
     arrowKeys();
@@ -132,13 +138,11 @@ function draw() {
         bubbleSize = 0; // set size back to 0 (pop bubble)
         bubblePop.play(); // playing pop sound when bubble pops
     }
-
 }
 
 
 /* ---------- USER FISH MOVEMENT ---------- */
 function arrowKeys() {
-
     // move left if left arrow is pressed
     if (keyIsDown(LEFT_ARROW)) {
         if (xPos > 50) { // constrain to canvas
@@ -160,12 +164,11 @@ function arrowKeys() {
         }
     }
     // move up if up arrow is pressed
-    if (keyIsDown(UP_ARROW)) { 
+    if (keyIsDown(UP_ARROW)) {
         if (yPos > 50) { // constrain to canvas
             yPos -= 3;
         }
     }
-
     // update and send user position to server while user moves
     if (keyIsPressed && (keyCode === UP_ARROW || keyCode === DOWN_ARROW || keyCode === LEFT_ARROW || keyCode === RIGHT_ARROW)) {
         let userPos = {
@@ -175,7 +178,6 @@ function arrowKeys() {
         };
         socket.emit('userPosition', userPos);
     }
-
 }
 
 /* ---------- UPDATE OTHER FISH MOVEMENT ---------- */
@@ -233,7 +235,4 @@ function keyPressed() {
             aquarium.loop();
         }
     }
-
-
 }
-

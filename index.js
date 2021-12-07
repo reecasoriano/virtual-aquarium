@@ -11,7 +11,8 @@ server.listen(port, () => {
     console.log("Server is listening at port: " + port);
 });
 
-let socketIDs;
+let socketIDs, userProperties;
+let socketNames = [];
 
 // initialize socket.io and create new server
 let io = require('socket.io');
@@ -19,11 +20,13 @@ io = new io.Server(server);
 
 // establish socket connection
 io.sockets.on('connection', (socket) => {
-    console.log("We have a new client: ", socket.id);
+    console.log("New client connected:", socket.id);
 
-    // broadcast new user's socket id to other clients
+    // broadcast new user's socket id and name to other clients
     socket.on('new-user', (data) => {
-        socket.broadcast.emit('new-user', socket.id);
+        userProperties = { id: socket.id, name: data.name };
+        socketNames.push(userProperties.name); // store name in array
+        socket.broadcast.emit('new-user', userProperties);
     });
 
     /* let new client know how many users already exist */
@@ -37,17 +40,15 @@ io.sockets.on('connection', (socket) => {
         socketIDs.push(value.id);
     });
 
-    // share all of the existing socketIDs to the new user who joined
-    let socketsData = { ids: socketIDs };
+    // share all of the existing socketIDs and socketNames to the new user who joined
+    let socketsData = { ids: socketIDs, names: socketNames };
     socket.emit('allSockets', socketsData);
-
 
     // on receiving 'userPosition', emit position to other clients
     socket.on('userPosition', (data) => {
         data.id = socket.id;
         io.sockets.emit('userPositionServer', data);
     });
-
 
     socket.on('disconnect', () => {
         console.log('Client left:', socket.id);
@@ -65,5 +66,3 @@ io.sockets.on('connection', (socket) => {
 
     });
 });
-
-
